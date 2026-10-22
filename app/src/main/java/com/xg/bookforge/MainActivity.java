@@ -121,6 +121,19 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private PrintAttributes.MediaSize parseMediaSize(String size) {
+        try {
+            String[] sides=size.split("x");
+            if(sides.length==2) {
+                float width=Float.parseFloat(sides[0]),height=Float.parseFloat(sides[1]);
+                if(width>=50&&width<=500&&height>=50&&height<=500)
+                    return new PrintAttributes.MediaSize("bookforge-"+Math.round(width)+"x"+Math.round(height),
+                        "BookForge",Math.round(width*1000/25.4f),Math.round(height*1000/25.4f));
+            }
+        }catch(Exception ignored){}
+        return PrintAttributes.MediaSize.ISO_A5;
+    }
+
     private void printHtml(String html, String title, String size) {
         if(printer != null) {root.removeView(printer);printer.destroy();printer=null;}
         WebView p = new WebView(this);
@@ -133,7 +146,7 @@ public final class MainActivity extends Activity {
             @Override public void onPageFinished(WebView view, String url) {
                 PrintManager manager = (PrintManager)getSystemService(PRINT_SERVICE);
                 PrintAttributes attrs = new PrintAttributes.Builder()
-                    .setMediaSize("A5".equals(size) ? PrintAttributes.MediaSize.ISO_A5 : PrintAttributes.MediaSize.ISO_A4)
+                    .setMediaSize(parseMediaSize(size))
                     .setResolution(new PrintAttributes.Resolution("BookForge","BookForge",300,300))
                     .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
                     .build();
