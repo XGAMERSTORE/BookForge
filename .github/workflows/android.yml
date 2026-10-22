@@ -25,6 +25,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
+      - name: Validate editor JavaScript
+        run: |
+          node - <<'NODE'
+          const fs = require('fs'), vm = require('vm');
+          const html = fs.readFileSync('app/src/main/assets/index.html','utf8');
+          const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+          if(!script)throw Error('Editor JavaScript not found');
+          new vm.Script(script,{filename:'bookforge-editor.js'});
+          for(const marker of ['function makeEpub','function pageFolio','function refreshPageVisibility','function compressImage'])if(!script.includes(marker))throw Error('Missing '+marker);
+          console.log('Editor JavaScript syntax OK; length='+script.length);
+          NODE
       - name: Build test APK and release AAB
         run: gradle --no-daemon --stacktrace assembleDebug bundleRelease
       - name: Verify build artifacts
@@ -34,11 +45,11 @@ jobs:
           ls -lh app/build/outputs/apk/debug/app-debug.apk app/build/outputs/bundle/release/app-release.aab
       - uses: actions/upload-artifact@v4
         with:
-          name: BookForge-v1.0.0-APK
+          name: BookForge-v1.1.0-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
-          name: BookForge-v1.0.0-AAB-unsigned
+          name: BookForge-v1.1.0-AAB-unsigned
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
